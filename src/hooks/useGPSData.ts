@@ -1,0 +1,77 @@
+import { useState, useEffect, useCallback } from 'react';
+import { GPSLocation } from '@/types/gps';
+import { API_ENDPOINTS, REFRESH_INTERVALS } from '@/config/api';
+
+interface UseGPSDataReturn {
+  locations: GPSLocation[];
+  isLoading: boolean;
+  error: string | null;
+  lastUpdate: Date | null;
+  refresh: () => Promise<void>;
+  isAutoRefresh: boolean;
+  setAutoRefresh: (enabled: boolean) => void;
+}
+
+export const useGPSData = (): UseGPSDataReturn => {
+  const [locations, setLocations] = useState<GPSLocation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [isAutoRefresh, setAutoRefresh] = useState(true);
+
+  const fetchLocations = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(API_ENDPOINTS.getLocations);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        setLocations(data.data.map((loc: any) => ({
+          ...loc,
+          latitude: parseFloat(loc.latitude),
+          longitude: parseFloat(loc.longitude),
+          ax: parseFloat(loc.ax),
+          ay: parseFloat(loc.ay),
+          az: parseFloat(loc.az),
+        })));
+        setLastUpdate(new Date());
+      } else {
+        throw new Error(data.message || 'Failed to fetch locations');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
+
+  // Auto-refresh
+  useEffect(() => {
+    if (!isAutoRefresh) return;
+    
+    const interval = setInterval(fetchLocations, REFRESH_INTERVALS.live);
+    return () => clearInterval(interval);
+  }, [isAutoRefresh, fetchLocations]);
+
+  return {
+    locations,
+    isLoading,
+    error,
+    lastUpdate,
+    refresh: fetchLocations,
+    isAutoRefresh,
+    setAutoRefresh,
+  };
+};
