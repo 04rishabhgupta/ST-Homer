@@ -1,5 +1,5 @@
 export interface GPSLocation {
-  id: number;
+  id?: number;
   device_id: string;
   latitude: number;
   longitude: number;
@@ -15,6 +15,22 @@ export interface Geofence {
   center: { lat: number; lng: number };
   radius: number;
   color: string;
+}
+
+export interface PolygonFence {
+  id: string;
+  name: string;
+  coordinates: { lat: number; lng: number }[];
+  color: string;
+  shiftStart: string;
+  shiftEnd: string;
+}
+
+export interface WorkerAssignment {
+  id: string;
+  workerId: string;
+  fenceId: string;
+  jobLabel: string;
 }
 
 export interface DeviceStatus {
