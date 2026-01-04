@@ -4,27 +4,44 @@ import { useGPSData } from '@/hooks/useGPSData';
 import { usePolygonFences } from '@/hooks/usePolygonFences';
 import { useWorkerAssignments } from '@/hooks/useWorkerAssignments';
 import { ManagerMap } from '@/components/manager/ManagerMap';
-import { FencePanel, DrawingMode } from '@/components/manager/FencePanel';
+import { FencePanel, FenceCreationPanel, DrawingMode } from '@/components/manager/FencePanel';
 import { WorkerPanel } from '@/components/manager/WorkerPanel';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, RefreshCw, Users, MapPin } from 'lucide-react';
+import { PolygonFence } from '@/types/gps';
 
 const ManagerDashboard = () => {
   const { user, logout } = useAuth();
   const [drawingMode, setDrawingMode] = useState<DrawingMode>('none');
   const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number }[] | null>(null);
+  const [isCreatingFence, setIsCreatingFence] = useState(false);
   
   const { locations, isLoading, refresh } = useGPSData();
   const { fences, addFence, removeFence, updateFence } = usePolygonFences();
   const { assignments, assignWorker, unassignWorker } = useWorkerAssignments();
 
-  // Get unique workers from locations
   const workers = Array.from(new Set(locations.map(loc => loc.device_id)));
 
   const handleFenceComplete = (coords: { lat: number; lng: number }[]) => {
     setPendingCoords(coords);
+  };
+
+  const handleStartCreating = () => {
+    setIsCreatingFence(true);
+    setDrawingMode('rectangle');
+    setPendingCoords(null);
+  };
+
+  const handleCancelCreating = () => {
+    setIsCreatingFence(false);
     setDrawingMode('none');
+    setPendingCoords(null);
+  };
+
+  const handleSaveFence = (fence: Omit<PolygonFence, 'id'>) => {
+    addFence(fence);
+    handleCancelCreating();
   };
 
   return (
@@ -83,6 +100,8 @@ const ManagerDashboard = () => {
                 onSetDrawingMode={setDrawingMode}
                 pendingCoords={pendingCoords}
                 onClearPendingCoords={() => setPendingCoords(null)}
+                isCreating={isCreatingFence}
+                onSetIsCreating={handleStartCreating}
               />
             </TabsContent>
             
@@ -109,6 +128,18 @@ const ManagerDashboard = () => {
             onFenceComplete={handleFenceComplete}
           />
         </div>
+
+        {/* Right Panel - Fence Creation */}
+        {isCreatingFence && (
+          <FenceCreationPanel
+            onClose={handleCancelCreating}
+            onSave={handleSaveFence}
+            drawingMode={drawingMode}
+            onSetDrawingMode={setDrawingMode}
+            pendingCoords={pendingCoords}
+            onClearPendingCoords={() => setPendingCoords(null)}
+          />
+        )}
       </div>
     </div>
   );
