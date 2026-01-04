@@ -4,7 +4,7 @@ import { useGPSData } from '@/hooks/useGPSData';
 import { usePolygonFences } from '@/hooks/usePolygonFences';
 import { useWorkerAssignments } from '@/hooks/useWorkerAssignments';
 import { ManagerMap } from '@/components/manager/ManagerMap';
-import { FencePanel } from '@/components/manager/FencePanel';
+import { FencePanel, DrawingMode } from '@/components/manager/FencePanel';
 import { WorkerPanel } from '@/components/manager/WorkerPanel';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,14 +12,20 @@ import { LogOut, RefreshCw, Users, MapPin } from 'lucide-react';
 
 const ManagerDashboard = () => {
   const { user, logout } = useAuth();
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawingMode, setDrawingMode] = useState<DrawingMode>('none');
+  const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number }[] | null>(null);
   
-  const { locations, isLoading, refresh, isAutoRefresh, setAutoRefresh } = useGPSData();
+  const { locations, isLoading, refresh } = useGPSData();
   const { fences, addFence, removeFence, updateFence } = usePolygonFences();
   const { assignments, assignWorker, unassignWorker } = useWorkerAssignments();
 
   // Get unique workers from locations
   const workers = Array.from(new Set(locations.map(loc => loc.device_id)));
+
+  const handleFenceComplete = (coords: { lat: number; lng: number }[]) => {
+    setPendingCoords(coords);
+    setDrawingMode('none');
+  };
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -73,8 +79,10 @@ const ManagerDashboard = () => {
                 onAddFence={addFence}
                 onRemoveFence={removeFence}
                 onUpdateFence={updateFence}
-                isDrawing={isDrawing}
-                onToggleDrawing={() => setIsDrawing(!isDrawing)}
+                drawingMode={drawingMode}
+                onSetDrawingMode={setDrawingMode}
+                pendingCoords={pendingCoords}
+                onClearPendingCoords={() => setPendingCoords(null)}
               />
             </TabsContent>
             
@@ -92,16 +100,13 @@ const ManagerDashboard = () => {
         </div>
 
         {/* Map */}
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <ManagerMap
             locations={locations}
             fences={fences}
             assignments={assignments}
-            isDrawing={isDrawing}
-            onFenceComplete={(coords) => {
-              setIsDrawing(false);
-              // Fence will be added via the FencePanel after naming
-            }}
+            drawingMode={drawingMode}
+            onFenceComplete={handleFenceComplete}
           />
         </div>
       </div>
