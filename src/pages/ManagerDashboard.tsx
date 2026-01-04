@@ -17,7 +17,7 @@ const ManagerDashboard = () => {
   const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number }[] | null>(null);
   const [isCreatingFence, setIsCreatingFence] = useState(false);
   
-  const { locations, isLoading, refresh } = useGPSData();
+  const { locations, isLoading, refresh, error } = useGPSData();
   const { fences, addFence, removeFence, updateFence } = usePolygonFences();
   const { assignments, assignWorker, unassignWorker } = useWorkerAssignments();
 
@@ -105,7 +105,7 @@ const ManagerDashboard = () => {
               />
             </TabsContent>
             
-            <TabsContent value="workers" className="flex-1 mt-0 overflow-auto">
+            <TabsContent value="workers" className="flex-1 mt-0 overflow-hidden">
               <WorkerPanel
                 workers={workers}
                 fences={fences}
@@ -113,6 +113,7 @@ const ManagerDashboard = () => {
                 locations={locations}
                 onAssignWorker={assignWorker}
                 onUnassignWorker={unassignWorker}
+                apiError={error}
               />
             </TabsContent>
           </Tabs>
