@@ -1,21 +1,23 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
   Marker,
   Polygon,
+  Rectangle,
   DrawingManager,
 } from '@react-google-maps/api';
 import { GPSLocation, PolygonFence, WorkerAssignment } from '@/types/gps';
 import { MAP_CONFIG } from '@/config/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isPointInPolygon, isWithinShift } from '@/lib/geoUtils';
+import { DrawingMode } from './FencePanel';
 
 interface ManagerMapProps {
   locations: GPSLocation[];
   fences: PolygonFence[];
   assignments: WorkerAssignment[];
-  isDrawing: boolean;
+  drawingMode: DrawingMode;
   onFenceComplete: (coords: { lat: number; lng: number }[]) => void;
 }
 
@@ -30,7 +32,7 @@ export const ManagerMap = ({
   locations,
   fences,
   assignments,
-  isDrawing,
+  drawingMode,
   onFenceComplete,
 }: ManagerMapProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -52,7 +54,7 @@ export const ManagerMap = ({
 
   const getMarkerColor = (deviceId: string, location: GPSLocation): string => {
     const assignment = assignments.find(a => a.workerId === deviceId);
-    if (!assignment) return '#94a3b8'; // Gray - unassigned
+    if (!assignment) return '#94a3b8';
 
     const fence = fences.find(f => f.id === assignment.fenceId);
     if (!fence) return '#94a3b8';
@@ -65,9 +67,9 @@ export const ManagerMap = ({
     );
 
     if (withinShift && insideFence) {
-      return '#22c55e'; // Green - inside during shift
+      return '#22c55e';
     }
-    return '#ef4444'; // Red - outside or off shift
+    return '#ef4444';
   };
 
   const onLoad = useCallback((map: google.maps.Map) => {
@@ -87,7 +89,26 @@ export const ManagerMap = ({
       coords.push({ lat: point.lat(), lng: point.lng() });
     }
     
-    polygon.setMap(null); // Remove the drawn polygon
+    polygon.setMap(null);
+    onFenceComplete(coords);
+  };
+
+  const onRectangleComplete = (rectangle: google.maps.Rectangle) => {
+    const bounds = rectangle.getBounds();
+    if (!bounds) return;
+
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    
+    // Convert rectangle bounds to polygon coordinates (4 corners)
+    const coords: { lat: number; lng: number }[] = [
+      { lat: ne.lat(), lng: sw.lng() }, // NW
+      { lat: ne.lat(), lng: ne.lng() }, // NE
+      { lat: sw.lat(), lng: ne.lng() }, // SE
+      { lat: sw.lat(), lng: sw.lng() }, // SW
+    ];
+    
+    rectangle.setMap(null);
     onFenceComplete(coords);
   };
 
@@ -108,6 +129,16 @@ export const ManagerMap = ({
     return <Skeleton className="w-full h-full" />;
   }
 
+  const getDrawingMode = () => {
+    if (drawingMode === 'polygon') {
+      return google.maps.drawing.OverlayType.POLYGON;
+    }
+    if (drawingMode === 'rectangle') {
+      return google.maps.drawing.OverlayType.RECTANGLE;
+    }
+    return null;
+  };
+
   return (
     <GoogleMap
       mapContainerStyle={containerStyle}
@@ -123,11 +154,12 @@ export const ManagerMap = ({
       }}
     >
       {/* Drawing Manager */}
-      {isDrawing && (
+      {drawingMode !== 'none' && (
         <DrawingManager
           onPolygonComplete={onPolygonComplete}
+          onRectangleComplete={onRectangleComplete}
           options={{
-            drawingMode: google.maps.drawing.OverlayType.POLYGON,
+            drawingMode: getDrawingMode(),
             drawingControl: false,
             polygonOptions: {
               fillColor: '#3b82f6',
@@ -136,8 +168,23 @@ export const ManagerMap = ({
               strokeWeight: 2,
               editable: true,
             },
+            rectangleOptions: {
+              fillColor: '#3b82f6',
+              fillOpacity: 0.3,
+              strokeColor: '#3b82f6',
+              strokeWeight: 2,
+              editable: true,
+              draggable: true,
+            },
           }}
         />
+      )}
+
+      {/* Drawing mode indicator */}
+      {drawingMode !== 'none' && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg z-10">
+          {drawingMode === 'polygon' ? 'Click to draw polygon points' : 'Click and drag to draw rectangle'}
+        </div>
       )}
 
       {/* Fence Polygons */}
