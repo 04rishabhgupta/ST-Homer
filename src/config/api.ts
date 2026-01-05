@@ -1,6 +1,5 @@
 // API Configuration
-// Change this URL when deploying to production
-export const API_BASE_URL = 'http://localhost/geofence/api.php';
+export const API_BASE_URL = 'http://ggenvsolutions.com/get_sensor_data.php';
 
 export const API_ENDPOINTS = {
   getLocations: `${API_BASE_URL}?action=get_locations`,
