@@ -24,7 +24,12 @@ export const useGPSData = (): UseGPSDataReturn => {
     setError(null);
     
     try {
-      const response = await fetch(API_ENDPOINTS.getLocations);
+      const response = await fetch(API_ENDPOINTS.getLocations, {
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
