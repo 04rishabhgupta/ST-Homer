@@ -33,8 +33,8 @@ export const useDeviceHistory = (): UseDeviceHistoryReturn => {
       
       const data = await response.json();
       
-      if (data.success && Array.isArray(data.data)) {
-        setHistory(data.data.map((loc: any) => ({
+      if (data.success && Array.isArray(data.devices)) {
+        setHistory(data.devices.map((loc: any) => ({
           ...loc,
           latitude: parseFloat(loc.latitude),
           longitude: parseFloat(loc.longitude),
