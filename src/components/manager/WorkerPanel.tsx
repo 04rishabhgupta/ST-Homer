@@ -134,7 +134,7 @@ export const WorkerPanel = ({
                   API Connection Failed
                 </div>
                 <p className="text-muted-foreground">
-                  Cannot reach localhost API from Lovable preview. Run the app locally with your XAMPP server.
+                  Unable to connect to the API. Please check your connection.
                 </p>
               </div>
             )}
