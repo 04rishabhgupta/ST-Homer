@@ -20,7 +20,12 @@ export const useDeviceHistory = (): UseDeviceHistoryReturn => {
     setError(null);
     
     try {
-      const response = await fetch(API_ENDPOINTS.getDeviceHistory(deviceId));
+      const response = await fetch(API_ENDPOINTS.getDeviceHistory(deviceId), {
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

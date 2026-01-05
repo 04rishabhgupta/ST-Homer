@@ -1,5 +1,7 @@
-// API Configuration
-export const API_BASE_URL = 'http://ggenvsolutions.com/get_sensor_data.php';
+// API Configuration - Using Edge Function as HTTPS proxy
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+export const API_BASE_URL = `${SUPABASE_URL}/functions/v1/api-proxy`;
 
 export const API_ENDPOINTS = {
   getLocations: `${API_BASE_URL}?action=get_locations`,
