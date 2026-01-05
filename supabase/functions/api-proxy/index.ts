@@ -26,9 +26,28 @@ serve(async (req) => {
     console.log(`Proxying request to: ${apiUrl}`);
 
     const response = await fetch(apiUrl);
-    const data = await response.json();
+    const rawText = await response.text();
+    
+    console.log(`Raw response (first 200 chars):`, rawText.substring(0, 200));
 
-    console.log(`Response received:`, data);
+    // Try to extract JSON from the response (handle PHP comments/whitespace)
+    let data;
+    try {
+      // First, try to find a JSON object in the response
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        data = JSON.parse(jsonMatch[0]);
+      } else {
+        // Try parsing directly if no match
+        data = JSON.parse(rawText);
+      }
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.error('Raw response:', rawText);
+      throw new Error(`Invalid JSON response from API: ${rawText.substring(0, 100)}`);
+    }
+
+    console.log(`Parsed response:`, data);
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
