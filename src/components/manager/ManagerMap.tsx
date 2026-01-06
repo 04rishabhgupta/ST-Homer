@@ -6,6 +6,7 @@ import {
   Polygon,
   Rectangle,
   DrawingManager,
+  InfoWindow,
 } from '@react-google-maps/api';
 import { GPSLocation, PolygonFence, WorkerAssignment } from '@/types/gps';
 import { MAP_CONFIG } from '@/config/api';
@@ -39,6 +40,12 @@ export const ManagerMap = ({
   onFenceComplete,
 }: ManagerMapProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [infoWindow, setInfoWindow] = useState<{
+    position: google.maps.LatLngLiteral;
+    deviceId: string;
+    location: GPSLocation;
+    status: 'compliant' | 'violation' | 'unassigned';
+  } | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -55,12 +62,12 @@ export const ManagerMap = ({
     }
   });
 
-  const getMarkerColor = (deviceId: string, location: GPSLocation): string => {
+  const getWorkerStatus = (deviceId: string, location: GPSLocation): 'compliant' | 'violation' | 'unassigned' => {
     const assignment = assignments.find(a => a.workerId === deviceId);
-    if (!assignment) return '#94a3b8';
+    if (!assignment) return 'unassigned';
 
     const fence = fences.find(f => f.id === assignment.fenceId);
-    if (!fence) return '#94a3b8';
+    if (!fence) return 'unassigned';
 
     const now = new Date();
     const withinShift = isWithinShift(now, fence.shiftStart, fence.shiftEnd);
@@ -70,9 +77,25 @@ export const ManagerMap = ({
     );
 
     if (withinShift && insideFence) {
-      return '#22c55e';
+      return 'compliant';
     }
-    return '#ef4444';
+    return 'violation';
+  };
+
+  const getMarkerColor = (status: 'compliant' | 'violation' | 'unassigned'): string => {
+    switch (status) {
+      case 'compliant': return '#22c55e';
+      case 'violation': return '#ef4444';
+      case 'unassigned': return '#94a3b8';
+    }
+  };
+
+  const getStatusLabel = (status: 'compliant' | 'violation' | 'unassigned'): string => {
+    switch (status) {
+      case 'compliant': return 'Inside Fence';
+      case 'violation': return 'Violation';
+      case 'unassigned': return 'Unassigned';
+    }
   };
 
   const onLoad = useCallback((map: google.maps.Map) => {
@@ -206,22 +229,62 @@ export const ManagerMap = ({
       ))}
 
       {/* Worker Markers */}
-      {Array.from(deviceLocations.entries()).map(([deviceId, location]) => (
-        <Marker
-          key={deviceId}
-          position={{ lat: location.latitude, lng: location.longitude }}
-          title={deviceId}
-          icon={{
-            path: PIN_PATH,
-            scale: 1.5,
-            fillColor: getMarkerColor(deviceId, location),
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 1,
-            anchor: new google.maps.Point(12, 24),
-          }}
-        />
-      ))}
+      {Array.from(deviceLocations.entries()).map(([deviceId, location]) => {
+        const status = getWorkerStatus(deviceId, location);
+        return (
+          <Marker
+            key={deviceId}
+            position={{ lat: location.latitude, lng: location.longitude }}
+            title={deviceId}
+            icon={{
+              path: PIN_PATH,
+              scale: 1.5,
+              fillColor: getMarkerColor(status),
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 1,
+              anchor: new google.maps.Point(12, 24),
+            }}
+            onClick={() => setInfoWindow({
+              position: { lat: location.latitude, lng: location.longitude },
+              deviceId,
+              location,
+              status,
+            })}
+          />
+        );
+      })}
+
+      {/* Info Window */}
+      {infoWindow && (
+        <InfoWindow
+          position={infoWindow.position}
+          onCloseClick={() => setInfoWindow(null)}
+        >
+          <div className="p-2 min-w-[180px]">
+            <h3 className="font-semibold text-sm mb-2">{infoWindow.deviceId}</h3>
+            <div className="text-xs space-y-1 text-gray-600">
+              <p>
+                <span className="font-medium">Status:</span>{' '}
+                <span className={
+                  infoWindow.status === 'compliant' ? 'text-green-600' :
+                  infoWindow.status === 'violation' ? 'text-red-600' : 'text-gray-500'
+                }>
+                  {getStatusLabel(infoWindow.status)}
+                </span>
+              </p>
+              <p>
+                <span className="font-medium">Position:</span>{' '}
+                {infoWindow.location.latitude.toFixed(6)}, {infoWindow.location.longitude.toFixed(6)}
+              </p>
+              <p>
+                <span className="font-medium">Last Update:</span>{' '}
+                {new Date(infoWindow.location.timestamp).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </InfoWindow>
+      )}
     </GoogleMap>
   );
 };
