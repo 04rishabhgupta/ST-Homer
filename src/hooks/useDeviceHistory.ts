@@ -35,12 +35,13 @@ export const useDeviceHistory = (): UseDeviceHistoryReturn => {
       
       if (data.success && Array.isArray(data.devices)) {
         setHistory(data.devices.map((loc: any) => ({
-          ...loc,
-          latitude: parseFloat(loc.latitude),
-          longitude: parseFloat(loc.longitude),
-          ax: parseFloat(loc.ax),
-          ay: parseFloat(loc.ay),
-          az: parseFloat(loc.az),
+          device_id: loc.device_id,
+          latitude: parseFloat(loc.lat || loc.latitude),
+          longitude: parseFloat(loc.lon || loc.longitude),
+          timestamp: loc.reading_time || loc.timestamp,
+          ax: parseFloat(loc.ax) || 0,
+          ay: parseFloat(loc.ay) || 0,
+          az: parseFloat(loc.az) || 0,
         })));
       } else {
         throw new Error(data.message || 'Failed to fetch history');
