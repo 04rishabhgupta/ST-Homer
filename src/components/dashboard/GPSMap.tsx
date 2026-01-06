@@ -24,6 +24,9 @@ const containerStyle = {
   height: '100%',
 };
 
+// Classic teardrop pin shape SVG path
+const PIN_PATH = "M12 0C7.31 0 3.5 3.81 3.5 8.5C3.5 14.88 12 24 12 24S20.5 14.88 20.5 8.5C20.5 3.81 16.69 0 12 0ZM12 11.5C10.34 11.5 9 10.16 9 8.5C9 6.84 10.34 5.5 12 5.5C13.66 5.5 15 6.84 15 8.5C15 10.16 13.66 11.5 12 11.5Z";
+
 export const GPSMap = ({
   locations,
   selectedDevice,
@@ -155,12 +158,13 @@ export const GPSMap = ({
           position={{ lat: location.latitude, lng: location.longitude }}
           title={location.device_id}
           icon={{
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: selectedDevice === location.device_id ? 12 : 8,
+            path: PIN_PATH,
+            scale: selectedDevice === location.device_id ? 1.8 : 1.4,
             fillColor: selectedDevice === location.device_id ? '#3b82f6' : '#22c55e',
             fillOpacity: 1,
             strokeColor: '#ffffff',
-            strokeWeight: 2,
+            strokeWeight: 1,
+            anchor: new google.maps.Point(12, 24),
           }}
           onClick={() => setInfoWindow({
             position: { lat: location.latitude, lng: location.longitude },
