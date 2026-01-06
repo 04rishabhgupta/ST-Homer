@@ -112,22 +112,143 @@ export const WorkerPanel = ({
     });
   };
 
+  // Separate workers into online and offline
+  const onlineWorkers = workers.filter(workerId => {
+    const location = getWorkerLocation(workerId);
+    return location !== undefined;
+  });
+
+  const offlineWorkers = workers.filter(workerId => {
+    const location = getWorkerLocation(workerId);
+    return location === undefined;
+  });
+
+  const renderWorkerCard = (workerId: string) => {
+    const assignment = assignments.find(a => a.workerId === workerId);
+    const fence = assignment ? fences.find(f => f.id === assignment.fenceId) : null;
+    const { status, color } = getWorkerStatus(workerId);
+    const location = getWorkerLocation(workerId);
+
+    return (
+      <Card key={workerId}>
+        <CardContent className="p-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                location ? 'bg-green-500/20 ring-2 ring-green-500' : 'bg-muted'
+              }`}>
+                <User className={`h-4 w-4 ${location ? 'text-green-600' : ''}`} />
+              </div>
+              <div>
+                <p className="font-medium text-sm">{workerId}</p>
+                <Badge variant={color} className="text-xs mt-1">
+                  {status}
+                </Badge>
+              </div>
+            </div>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedWorker(workerId);
+                    setSelectedFence(assignment?.fenceId || '');
+                    setJobLabel(assignment?.jobLabel || '');
+                  }}
+                >
+                  {assignment ? 'Edit' : 'Assign'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Assign Worker: {workerId}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Select Fence</Label>
+                    <Select value={selectedFence} onValueChange={setSelectedFence}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a fence" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fences.map(f => (
+                          <SelectItem key={f.id} value={f.id}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: f.color }}
+                              />
+                              {f.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Job Label</Label>
+                    <Input
+                      placeholder="e.g., Crane Operator"
+                      value={jobLabel}
+                      onChange={(e) => setJobLabel(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleAssign} className="flex-1">
+                      Save Assignment
+                    </Button>
+                    {assignment && (
+                      <Button
+                        variant="destructive"
+                        onClick={() => onUnassignWorker(workerId)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {assignment && fence && (
+            <div className="mt-2 pt-2 border-t text-xs text-muted-foreground space-y-1">
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {fence.name}
+              </div>
+              <div className="flex items-center gap-1">
+                <Briefcase className="h-3 w-3" />
+                {assignment.jobLabel}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="p-4 space-y-4 h-full flex flex-col">
-      {/* Assigned Workers Section */}
-      <div className="flex-1 min-h-0">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Assigned Workers
-        </h3>
-        <ScrollArea className="h-[calc(50vh-180px)]">
+      {/* Online Workers Section - Pinned */}
+      <div className="flex-shrink-0">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Online Workers ({onlineWorkers.length})
+          </h3>
+        </div>
+        <ScrollArea className="max-h-[35vh]">
           <div className="space-y-2">
-            {workers.length === 0 && !apiError && (
+            {onlineWorkers.length === 0 && !apiError && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No workers detected yet
+                No workers currently online
               </p>
             )}
 
-            {apiError && workers.length === 0 && (
+            {apiError && onlineWorkers.length === 0 && (
               <div className="p-3 bg-destructive/10 rounded-md text-xs">
                 <div className="flex items-center gap-2 text-destructive font-medium mb-1">
                   <AlertCircle className="h-3 w-3" />
@@ -139,110 +260,27 @@ export const WorkerPanel = ({
               </div>
             )}
 
-            {workers.map(workerId => {
-              const assignment = assignments.find(a => a.workerId === workerId);
-              const fence = assignment ? fences.find(f => f.id === assignment.fenceId) : null;
-              const { status, color } = getWorkerStatus(workerId);
-              const location = getWorkerLocation(workerId);
+            {onlineWorkers.map(workerId => renderWorkerCard(workerId))}
+          </div>
+        </ScrollArea>
+      </div>
 
-              return (
-                <Card key={workerId}>
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                          <User className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{workerId}</p>
-                          <Badge variant={color} className="text-xs mt-1">
-                            {status}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedWorker(workerId);
-                              setSelectedFence(assignment?.fenceId || '');
-                              setJobLabel(assignment?.jobLabel || '');
-                            }}
-                          >
-                            {assignment ? 'Edit' : 'Assign'}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Assign Worker: {workerId}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label>Select Fence</Label>
-                              <Select value={selectedFence} onValueChange={setSelectedFence}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Choose a fence" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {fences.map(f => (
-                                    <SelectItem key={f.id} value={f.id}>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className="w-2 h-2 rounded-full"
-                                          style={{ backgroundColor: f.color }}
-                                        />
-                                        {f.name}
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label>Job Label</Label>
-                              <Input
-                                placeholder="e.g., Crane Operator"
-                                value={jobLabel}
-                                onChange={(e) => setJobLabel(e.target.value)}
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <Button onClick={handleAssign} className="flex-1">
-                                Save Assignment
-                              </Button>
-                              {assignment && (
-                                <Button
-                                  variant="destructive"
-                                  onClick={() => onUnassignWorker(workerId)}
-                                >
-                                  Remove
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+      <Separator />
 
-                    {assignment && fence && (
-                      <div className="mt-2 pt-2 border-t text-xs text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {fence.name}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Briefcase className="h-3 w-3" />
-                          {assignment.jobLabel}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+      {/* Offline Workers Section */}
+      <div className="flex-shrink-0">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          Offline Workers ({offlineWorkers.length})
+        </h3>
+        <ScrollArea className="max-h-[20vh]">
+          <div className="space-y-2">
+            {offlineWorkers.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                All workers are online
+              </p>
+            )}
+
+            {offlineWorkers.map(workerId => renderWorkerCard(workerId))}
           </div>
         </ScrollArea>
       </div>
@@ -254,7 +292,7 @@ export const WorkerPanel = ({
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
           ESP32 Device Log
         </h3>
-        <ScrollArea className="h-[calc(50vh-180px)]">
+        <ScrollArea className="h-[calc(30vh-100px)]">
           <div className="space-y-2">
             {latestLocations.size === 0 && !apiError && (
               <p className="text-xs text-muted-foreground text-center py-2">
