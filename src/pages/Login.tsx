@@ -42,7 +42,7 @@ const Login = () => {
               <MapPin className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold">GeoFence Tracker</h1>
+          <h1 className="text-2xl font-bold">Homer</h1>
           <p className="text-muted-foreground">Worker location monitoring system</p>
         </div>
 
