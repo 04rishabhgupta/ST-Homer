@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import homerLogo from '@/assets/homer-logo.svg';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -37,10 +38,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-muted p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-              <MapPin className="h-6 w-6 text-primary-foreground" />
-            </div>
+        <div className="flex justify-center">
+            <img src={homerLogo} alt="Homer Logo" className="h-24 w-auto" />
           </div>
           <h1 className="text-2xl font-bold">Homer</h1>
           <p className="text-muted-foreground">Worker location monitoring system</p>
