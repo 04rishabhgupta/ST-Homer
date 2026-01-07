@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle } from 'lucide-react';
-import homerLogo from '@/assets/homer-logo.svg';
+import homerLogo from '@/assets/homer-logo.gif';
 
 const Login = () => {
   const [email, setEmail] = useState('');
