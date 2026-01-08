@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle, History, X } from 'lucide-react';
+import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle, History, Activity } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -45,69 +45,154 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
     };
   };
 
+  // Calculate movement intensity from accelerometer data
+  const getMovementIntensity = (ax: number, ay: number, az: number) => {
+    const magnitude = Math.sqrt(ax * ax + ay * ay + az * az);
+    if (magnitude < 1.5) return { label: 'Stationary', color: 'bg-muted text-muted-foreground' };
+    if (magnitude < 3) return { label: 'Low', color: 'bg-accent/20 text-accent-foreground' };
+    if (magnitude < 6) return { label: 'Moderate', color: 'bg-primary/20 text-primary' };
+    return { label: 'High', color: 'bg-destructive/20 text-destructive' };
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <History className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <DialogTitle className="text-lg font-semibold">{deviceId}</DialogTitle>
-                <p className="text-sm text-muted-foreground">
-                  {deviceReadings.length} reading{deviceReadings.length !== 1 ? 's' : ''} recorded
-                </p>
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="flex-shrink-0 p-5 pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center ring-1 ring-primary/20">
+              <History className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <DialogTitle className="text-lg font-semibold tracking-tight">{deviceId}</DialogTitle>
+              <div className="flex items-center gap-3 mt-1">
+                <Badge variant="outline" className="text-[10px] font-medium">
+                  ESP32
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  {deviceReadings.length} reading{deviceReadings.length !== 1 ? 's' : ''}
+                </span>
               </div>
             </div>
           </div>
-        </DialogHeader>
+        </div>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          <div className="space-y-2 py-2">
+        {/* Column Headers */}
+        <div className="flex-shrink-0 px-5 py-2.5 bg-muted/50 border-b">
+          <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="col-span-5">Location</div>
+            <div className="col-span-4">Accelerometer</div>
+            <div className="col-span-3 text-right">Time</div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <ScrollArea className="flex-1">
+          <div className="p-3 space-y-2">
             {deviceReadings.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Navigation className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No coordinates recorded</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                  <Navigation className="h-8 w-8 opacity-40" />
+                </div>
+                <p className="text-sm font-medium">No coordinates recorded</p>
+                <p className="text-xs mt-1 opacity-70">Data will appear when the device reports</p>
               </div>
             ) : (
               deviceReadings.map((reading, index) => {
                 const { date, time } = formatTimestamp(reading.timestamp);
                 const isLatest = index === 0;
+                const movement = getMovementIntensity(reading.ax, reading.ay, reading.az);
 
                 return (
-                  <Card 
-                    key={`${reading.timestamp}-${index}`} 
-                    className={`transition-colors ${isLatest ? 'border-primary/50 bg-primary/5' : 'bg-muted/30'}`}
+                  <div
+                    key={`${reading.timestamp}-${index}`}
+                    className={`
+                      group relative rounded-lg border p-3 transition-all duration-200
+                      ${isLatest 
+                        ? 'border-primary/40 bg-primary/5 shadow-sm' 
+                        : 'border-border/50 bg-card hover:border-border hover:bg-muted/30'
+                      }
+                    `}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <Navigation className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                            <span className="font-mono text-sm font-medium truncate">
-                              {reading.latitude.toFixed(6)}, {reading.longitude.toFixed(6)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3 flex-shrink-0" />
-                            <span>{date} at {time}</span>
+                    {/* Latest indicator line */}
+                    {isLatest && (
+                      <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-primary rounded-full" />
+                    )}
+
+                    <div className="grid grid-cols-12 gap-2 items-start">
+                      {/* Coordinates */}
+                      <div className="col-span-5">
+                        <div className="flex items-start gap-2">
+                          <Navigation className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${isLatest ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div>
+                            <p className="font-mono text-xs font-medium leading-tight">
+                              {reading.latitude.toFixed(6)}
+                            </p>
+                            <p className="font-mono text-xs font-medium leading-tight text-muted-foreground">
+                              {reading.longitude.toFixed(6)}
+                            </p>
                           </div>
                         </div>
-                        {isLatest && (
-                          <Badge variant="default" className="text-[10px] px-1.5 py-0.5 flex-shrink-0">
-                            Latest
-                          </Badge>
-                        )}
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      {/* Accelerometer */}
+                      <div className="col-span-4">
+                        <div className="flex items-start gap-2">
+                          <Activity className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${isLatest ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div className="space-y-1">
+                            <div className="flex gap-1.5 font-mono text-[10px]">
+                              <span className="text-destructive/80">X:{reading.ax.toFixed(1)}</span>
+                              <span className="text-primary/80">Y:{reading.ay.toFixed(1)}</span>
+                              <span className="text-accent-foreground/80">Z:{reading.az.toFixed(1)}</span>
+                            </div>
+                            <Badge 
+                              variant="secondary" 
+                              className={`text-[9px] px-1.5 py-0 h-4 font-medium ${movement.color}`}
+                            >
+                              {movement.label}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Timestamp */}
+                      <div className="col-span-3 text-right">
+                        <div className="flex flex-col items-end gap-1">
+                          {isLatest && (
+                            <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">
+                              Latest
+                            </Badge>
+                          )}
+                          <div className="text-[10px] text-muted-foreground">
+                            <p className="font-medium">{time}</p>
+                            <p className="opacity-70">{date}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 );
               })
             )}
           </div>
         </ScrollArea>
+
+        {/* Footer Stats */}
+        {deviceReadings.length > 0 && (
+          <div className="flex-shrink-0 px-5 py-3 border-t bg-muted/30">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-primary" />
+                  <span>Latest reading</span>
+                </div>
+                <span className="text-[10px]">
+                  {formatTimestamp(deviceReadings[0].timestamp).date} at {formatTimestamp(deviceReadings[0].timestamp).time}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
