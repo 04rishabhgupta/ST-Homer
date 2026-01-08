@@ -9,6 +9,7 @@ import { WorkerPanel } from '@/components/manager/WorkerPanel';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, RefreshCw, Users, MapPin } from 'lucide-react';
+import homerLogo from '@/assets/homer-logo.gif';
 import { PolygonFence } from '@/types/gps';
 
 const ManagerDashboard = () => {
@@ -49,9 +50,7 @@ const ManagerDashboard = () => {
       {/* Header */}
       <header className="border-b bg-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-            <MapPin className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <img src={homerLogo} alt="Homer Logo" className="h-10 w-10 rounded-full" />
           <div>
             <h1 className="font-semibold">Manager Dashboard</h1>
             <p className="text-xs text-muted-foreground">Welcome, {user?.name}</p>
@@ -78,11 +77,11 @@ const ManagerDashboard = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar */}
         <div className="w-80 border-r bg-card flex flex-col">
-          <Tabs defaultValue="fences" className="flex-1 flex flex-col">
+          <Tabs defaultValue="taskAreas" className="flex-1 flex flex-col">
             <TabsList className="w-full rounded-none border-b">
-              <TabsTrigger value="fences" className="flex-1 gap-2">
+              <TabsTrigger value="taskAreas" className="flex-1 gap-2">
                 <MapPin className="h-4 w-4" />
-                Fences
+                Task Areas
               </TabsTrigger>
               <TabsTrigger value="workers" className="flex-1 gap-2">
                 <Users className="h-4 w-4" />
@@ -90,7 +89,7 @@ const ManagerDashboard = () => {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="fences" className="flex-1 mt-0 overflow-auto">
+            <TabsContent value="taskAreas" className="flex-1 mt-0 overflow-auto">
               <FencePanel
                 fences={fences}
                 onAddFence={addFence}

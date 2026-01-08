@@ -167,10 +167,10 @@ export const WorkerPanel = ({
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>Select Fence</Label>
+                    <Label>Select Task Area</Label>
                     <Select value={selectedFence} onValueChange={setSelectedFence}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a fence" />
+                        <SelectValue placeholder="Choose a task area" />
                       </SelectTrigger>
                       <SelectContent>
                         {fences.map(f => (
