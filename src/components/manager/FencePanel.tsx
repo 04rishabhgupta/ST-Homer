@@ -94,7 +94,7 @@ export const FencePanel = ({
     } else if (pendingCoords && pendingCoords.length >= 3) {
       coords = pendingCoords;
     } else {
-      alert('Please draw a fence on the map first');
+      alert('Please draw a task area on the map first');
       return;
     }
 
@@ -149,7 +149,7 @@ export const FencePanel = ({
         size="sm"
       >
         <Plus className="h-4 w-4 mr-2" />
-        Create Fence
+        Create Task Area
       </Button>
 
       <ScrollArea className="h-[calc(100vh-280px)]">
@@ -187,7 +187,7 @@ export const FencePanel = ({
 
           {fences.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No fences created yet
+              No task areas created yet
             </p>
           )}
         </div>
@@ -262,7 +262,7 @@ export const FenceCreationPanel = ({
     } else if (pendingCoords && pendingCoords.length >= 3) {
       coords = pendingCoords;
     } else {
-      alert('Please draw a fence on the map first');
+      alert('Please draw a task area on the map first');
       return;
     }
 
@@ -294,7 +294,7 @@ export const FenceCreationPanel = ({
   return (
     <div className="w-80 border-l bg-card flex flex-col h-full">
       <div className="p-4 border-b flex items-center justify-between">
-        <h2 className="font-semibold">Create Fence</h2>
+        <h2 className="font-semibold">Create Task Area</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -391,7 +391,7 @@ export const FenceCreationPanel = ({
 
         <div className="space-y-3 pt-3 border-t">
           <div>
-            <Label className="text-xs">Fence Name</Label>
+            <Label className="text-xs">Task Area Name</Label>
             <Input
               placeholder="e.g., Crane Zone A"
               value={newFence.name}
@@ -439,7 +439,7 @@ export const FenceCreationPanel = ({
 
       <div className="p-4 border-t">
         <Button onClick={handleSave} className="w-full">
-          Save Fence
+          Save Task Area
         </Button>
       </div>
     </div>

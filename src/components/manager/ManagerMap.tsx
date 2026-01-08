@@ -92,7 +92,7 @@ export const ManagerMap = ({
 
   const getStatusLabel = (status: 'compliant' | 'violation' | 'unassigned'): string => {
     switch (status) {
-      case 'compliant': return 'Inside Fence';
+      case 'compliant': return 'Inside Task Area';
       case 'violation': return 'Violation';
       case 'unassigned': return 'Unassigned';
     }
