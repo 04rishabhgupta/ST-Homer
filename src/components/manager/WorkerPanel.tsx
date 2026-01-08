@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle } from 'lucide-react';
+import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle, History, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,95 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { isPointInPolygon, isWithinShift } from '@/lib/geoUtils';
+
+interface DeviceHistoryDialogProps {
+  deviceId: string;
+  locations: GPSLocation[];
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHistoryDialogProps) => {
+  // Get all readings for this device, sorted by timestamp (newest first)
+  const deviceReadings = locations
+    .filter(loc => loc.device_id === deviceId)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return {
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    };
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <History className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-semibold">{deviceId}</DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  {deviceReadings.length} reading{deviceReadings.length !== 1 ? 's' : ''} recorded
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <ScrollArea className="flex-1 -mx-6 px-6">
+          <div className="space-y-2 py-2">
+            {deviceReadings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Navigation className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No coordinates recorded</p>
+              </div>
+            ) : (
+              deviceReadings.map((reading, index) => {
+                const { date, time } = formatTimestamp(reading.timestamp);
+                const isLatest = index === 0;
+
+                return (
+                  <Card 
+                    key={`${reading.timestamp}-${index}`} 
+                    className={`transition-colors ${isLatest ? 'border-primary/50 bg-primary/5' : 'bg-muted/30'}`}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Navigation className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                            <span className="font-mono text-sm font-medium truncate">
+                              {reading.latitude.toFixed(6)}, {reading.longitude.toFixed(6)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 flex-shrink-0" />
+                            <span>{date} at {time}</span>
+                          </div>
+                        </div>
+                        {isLatest && (
+                          <Badge variant="default" className="text-[10px] px-1.5 py-0.5 flex-shrink-0">
+                            Latest
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 interface WorkerPanelProps {
   workers: string[];
@@ -46,6 +135,7 @@ export const WorkerPanel = ({
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
   const [selectedFence, setSelectedFence] = useState<string>('');
   const [jobLabel, setJobLabel] = useState('');
+  const [selectedDeviceHistory, setSelectedDeviceHistory] = useState<string | null>(null);
 
   // Get latest location for each device
   const getLatestLocations = (): Map<string, GPSLocation> => {
@@ -307,7 +397,11 @@ export const WorkerPanel = ({
             )}
 
             {Array.from(latestLocations.entries()).map(([deviceId, location]) => (
-              <Card key={deviceId} className="bg-muted/50">
+              <Card 
+                key={deviceId} 
+                className="bg-muted/50 cursor-pointer hover:bg-muted/80 hover:border-primary/50 transition-colors"
+                onClick={() => setSelectedDeviceHistory(deviceId)}
+              >
                 <CardContent className="p-2">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-xs">{deviceId}</span>
@@ -333,6 +427,16 @@ export const WorkerPanel = ({
           </div>
         </ScrollArea>
       </div>
+
+      {/* Device History Dialog */}
+      {selectedDeviceHistory && (
+        <DeviceHistoryDialog
+          deviceId={selectedDeviceHistory}
+          locations={locations}
+          isOpen={!!selectedDeviceHistory}
+          onClose={() => setSelectedDeviceHistory(null)}
+        />
+      )}
     </div>
   );
 };
