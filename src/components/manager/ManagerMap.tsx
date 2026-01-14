@@ -84,12 +84,12 @@ export const ManagerMap = ({
     return 'violation';
   };
 
-  const getMarkerColor = (status: 'compliant' | 'violation' | 'unassigned'): string => {
-    switch (status) {
-      case 'compliant': return '#22c55e';
-      case 'violation': return '#ef4444';
-      case 'unassigned': return '#94a3b8';
-    }
+  const getMarkerColor = (deviceId: string): string => {
+    const assignment = assignments.find(a => a.workerId === deviceId);
+    if (!assignment) return '#94a3b8'; // Gray for unassigned
+    
+    const fence = fences.find(f => f.id === assignment.fenceId);
+    return fence?.color || '#94a3b8';
   };
 
   const getStatusLabel = (status: 'compliant' | 'violation' | 'unassigned'): string => {
@@ -241,7 +241,7 @@ export const ManagerMap = ({
             icon={{
               path: PIN_PATH,
               scale: 1.5,
-              fillColor: getMarkerColor(status),
+              fillColor: getMarkerColor(deviceId),
               fillOpacity: 1,
               strokeColor: '#ffffff',
               strokeWeight: 1,
