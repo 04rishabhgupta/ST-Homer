@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GPSLocation } from '@/types/gps';
-import { API_ENDPOINTS, REFRESH_INTERVALS } from '@/config/api';
+import { API_ENDPOINTS } from '@/config/api';
+
+interface UseGPSDataOptions {
+  refreshIntervalSeconds?: number;
+}
 
 interface UseGPSDataReturn {
   locations: GPSLocation[];
@@ -12,7 +16,8 @@ interface UseGPSDataReturn {
   setAutoRefresh: (enabled: boolean) => void;
 }
 
-export const useGPSData = (): UseGPSDataReturn => {
+export const useGPSData = (options: UseGPSDataOptions = {}): UseGPSDataReturn => {
+  const { refreshIntervalSeconds = 5 } = options;
   const [locations, setLocations] = useState<GPSLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,13 +68,14 @@ export const useGPSData = (): UseGPSDataReturn => {
     fetchLocations();
   }, [fetchLocations]);
 
-  // Auto-refresh
+  // Auto-refresh with configurable interval
   useEffect(() => {
     if (!isAutoRefresh) return;
     
-    const interval = setInterval(fetchLocations, REFRESH_INTERVALS.live);
+    const intervalMs = refreshIntervalSeconds * 1000;
+    const interval = setInterval(fetchLocations, intervalMs);
     return () => clearInterval(interval);
-  }, [isAutoRefresh, fetchLocations]);
+  }, [isAutoRefresh, fetchLocations, refreshIntervalSeconds]);
 
   return {
     locations,

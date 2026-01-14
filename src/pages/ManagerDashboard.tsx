@@ -21,8 +21,10 @@ const ManagerDashboard = () => {
   const [isCreatingFence, setIsCreatingFence] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   
-  const { locations, isLoading, refresh, error } = useGPSData();
   const { settings, updateSettings, resetToDefaults } = useManagerSettings();
+  const { locations, isLoading, refresh, error } = useGPSData({
+    refreshIntervalSeconds: settings.autoRefreshIntervalSeconds,
+  });
   const { fences, addFence, removeFence, updateFence } = usePolygonFences();
   const { assignments, assignWorker, unassignWorker } = useWorkerAssignments();
 
