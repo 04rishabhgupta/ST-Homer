@@ -20,6 +20,7 @@ interface ManagerMapProps {
   assignments: WorkerAssignment[];
   drawingMode: DrawingMode;
   onFenceComplete: (coords: { lat: number; lng: number }[]) => void;
+  defaultZoom?: number;
 }
 
 const containerStyle = {
@@ -38,6 +39,7 @@ export const ManagerMap = ({
   assignments,
   drawingMode,
   onFenceComplete,
+  defaultZoom = 16,
 }: ManagerMapProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [infoWindow, setInfoWindow] = useState<{
@@ -169,7 +171,7 @@ export const ManagerMap = ({
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={MAP_CONFIG.defaultCenter}
-      zoom={MAP_CONFIG.defaultZoom}
+      zoom={defaultZoom}
       onLoad={onLoad}
       onUnmount={onUnmount}
       options={{
