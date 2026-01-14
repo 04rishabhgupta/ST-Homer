@@ -4,7 +4,6 @@ import {
   useJsApiLoader,
   Marker,
   Polygon,
-  Rectangle,
   DrawingManager,
   InfoWindow,
 } from '@react-google-maps/api';
@@ -140,6 +139,31 @@ export const ManagerMap = ({
     onFenceComplete(coords);
   };
 
+  const onCircleComplete = (circle: google.maps.Circle) => {
+    const center = circle.getCenter();
+    const radius = circle.getRadius();
+    if (!center) return;
+
+    // Convert circle to polygon with 32 points
+    const numPoints = 32;
+    const coords: { lat: number; lng: number }[] = [];
+    
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * 2 * Math.PI;
+      // Convert radius from meters to degrees (approximate)
+      const latOffset = (radius / 111320) * Math.cos(angle);
+      const lngOffset = (radius / (111320 * Math.cos(center.lat() * Math.PI / 180))) * Math.sin(angle);
+      
+      coords.push({
+        lat: center.lat() + latOffset,
+        lng: center.lng() + lngOffset,
+      });
+    }
+    
+    circle.setMap(null);
+    onFenceComplete(coords);
+  };
+
   if (loadError) {
     return (
       <div className="flex items-center justify-center h-full bg-muted">
@@ -164,6 +188,9 @@ export const ManagerMap = ({
     if (drawingMode === 'rectangle') {
       return google.maps.drawing.OverlayType.RECTANGLE;
     }
+    if (drawingMode === 'circle') {
+      return google.maps.drawing.OverlayType.CIRCLE;
+    }
     return null;
   };
 
@@ -186,6 +213,7 @@ export const ManagerMap = ({
         <DrawingManager
           onPolygonComplete={onPolygonComplete}
           onRectangleComplete={onRectangleComplete}
+          onCircleComplete={onCircleComplete}
           options={{
             drawingMode: getDrawingMode(),
             drawingControl: false,
@@ -204,6 +232,14 @@ export const ManagerMap = ({
               editable: true,
               draggable: true,
             },
+            circleOptions: {
+              fillColor: '#3b82f6',
+              fillOpacity: 0.3,
+              strokeColor: '#3b82f6',
+              strokeWeight: 2,
+              editable: true,
+              draggable: true,
+            },
           }}
         />
       )}
@@ -211,7 +247,9 @@ export const ManagerMap = ({
       {/* Drawing mode indicator */}
       {drawingMode !== 'none' && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg z-10">
-          {drawingMode === 'polygon' ? 'Click to draw polygon points' : 'Click and drag to draw rectangle'}
+          {drawingMode === 'polygon' ? 'Click to draw polygon points' : 
+           drawingMode === 'circle' ? 'Click and drag to create circle' : 
+           'Click and drag to draw rectangle'}
         </div>
       )}
 

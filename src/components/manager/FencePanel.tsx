@@ -6,9 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Trash2, Clock, Square, PenTool, Type, X } from 'lucide-react';
+import { Plus, Trash2, Clock, Square, PenTool, Type, X, Circle } from 'lucide-react';
 
-export type DrawingMode = 'none' | 'polygon' | 'rectangle';
+export type DrawingMode = 'none' | 'polygon' | 'rectangle' | 'circle';
 
 interface FencePanelProps {
   fences: PolygonFence[];
@@ -220,7 +220,7 @@ export const FenceCreationPanel = ({
     shiftEnd: '17:00',
     color: COLORS[0],
   });
-  const [createMethod, setCreateMethod] = useState<'draw' | 'rectangle' | 'coordinates'>('rectangle');
+  const [createMethod, setCreateMethod] = useState<'draw' | 'rectangle' | 'circle' | 'coordinates'>('rectangle');
   const [manualCoords, setManualCoords] = useState([
     { lat: '', lng: '' },
     { lat: '', lng: '' },
@@ -228,13 +228,15 @@ export const FenceCreationPanel = ({
     { lat: '', lng: '' },
   ]);
 
-  const handleMethodChange = (method: 'draw' | 'rectangle' | 'coordinates') => {
+  const handleMethodChange = (method: 'draw' | 'rectangle' | 'circle' | 'coordinates') => {
     setCreateMethod(method);
     onClearPendingCoords();
     if (method === 'draw') {
       onSetDrawingMode('polygon');
     } else if (method === 'rectangle') {
       onSetDrawingMode('rectangle');
+    } else if (method === 'circle') {
+      onSetDrawingMode('circle');
     } else {
       onSetDrawingMode('none');
     }
@@ -301,19 +303,23 @@ export const FenceCreationPanel = ({
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-4">
-        <Tabs value={createMethod} onValueChange={(v) => handleMethodChange(v as 'draw' | 'rectangle' | 'coordinates')}>
-          <TabsList className="w-full">
-            <TabsTrigger value="rectangle" className="flex-1 gap-1 text-xs">
+        <Tabs value={createMethod} onValueChange={(v) => handleMethodChange(v as 'draw' | 'rectangle' | 'circle' | 'coordinates')}>
+          <TabsList className="w-full grid grid-cols-4">
+            <TabsTrigger value="rectangle" className="gap-1 text-xs px-1">
               <Square className="h-3 w-3" />
-              Rectangle
+              <span className="hidden sm:inline">Rect</span>
             </TabsTrigger>
-            <TabsTrigger value="draw" className="flex-1 gap-1 text-xs">
+            <TabsTrigger value="circle" className="gap-1 text-xs px-1">
+              <Circle className="h-3 w-3" />
+              <span className="hidden sm:inline">Circle</span>
+            </TabsTrigger>
+            <TabsTrigger value="draw" className="gap-1 text-xs px-1">
               <PenTool className="h-3 w-3" />
-              Draw
+              <span className="hidden sm:inline">Draw</span>
             </TabsTrigger>
-            <TabsTrigger value="coordinates" className="flex-1 gap-1 text-xs">
+            <TabsTrigger value="coordinates" className="gap-1 text-xs px-1">
               <Type className="h-3 w-3" />
-              Manual
+              <span className="hidden sm:inline">Manual</span>
             </TabsTrigger>
           </TabsList>
 
@@ -327,6 +333,20 @@ export const FenceCreationPanel = ({
             {pendingCoords && pendingCoords.length > 0 && (
               <div className="p-2 bg-primary/10 rounded text-xs text-primary">
                 ✓ Rectangle placed
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="circle" className="space-y-3 mt-3">
+            <div className="p-3 bg-muted rounded-md text-xs">
+              <p className="font-medium mb-1">Drop a circle</p>
+              <p className="text-muted-foreground">
+                Click and drag on the map to create a circle. Resize by dragging the edge.
+              </p>
+            </div>
+            {pendingCoords && pendingCoords.length > 0 && (
+              <div className="p-2 bg-primary/10 rounded text-xs text-primary">
+                ✓ Circle placed
               </div>
             )}
           </TabsContent>
