@@ -9,9 +9,10 @@ import { ManagerMap } from '@/components/manager/ManagerMap';
 import { FencePanel, FenceCreationPanel, DrawingMode } from '@/components/manager/FencePanel';
 import { WorkerPanel } from '@/components/manager/WorkerPanel';
 import { SettingsDialog } from '@/components/manager/SettingsDialog';
+import { AlertsHistoryPanel } from '@/components/manager/AlertsHistoryPanel';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, RefreshCw, Users, MapPin, Settings } from 'lucide-react';
+import { LogOut, RefreshCw, Users, MapPin, Settings, Bell } from 'lucide-react';
 import homerLogo from '@/assets/homer-logo.gif';
 import { PolygonFence } from '@/types/gps';
 
@@ -21,6 +22,7 @@ const ManagerDashboard = () => {
   const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number }[] | null>(null);
   const [isCreatingFence, setIsCreatingFence] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [alertsPanelOpen, setAlertsPanelOpen] = useState(false);
   
   const { settings, updateSettings, resetToDefaults } = useManagerSettings();
   const { locations, isLoading, refresh, error } = useGPSData({
@@ -30,7 +32,7 @@ const ManagerDashboard = () => {
   const { assignments, assignWorker, unassignWorker } = useWorkerAssignments();
 
   // Zone alerts with configurable delay from settings
-  useZoneAlerts(locations, fences, assignments, {
+  const { alerts, clearAlert, clearAllAlerts } = useZoneAlerts(locations, fences, assignments, {
     outOfZoneAlertDelaySeconds: settings.outOfZoneAlertDelaySeconds,
   });
 
@@ -81,15 +83,26 @@ const ManagerDashboard = () => {
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
+            onClick={() => setAlertsPanelOpen(!alertsPanelOpen)}
+            className="relative"
+          >
+            <Bell className="h-4 w-4" />
+            {alerts.length > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                {alerts.length > 9 ? '9+' : alerts.length}
+              </span>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => setSettingsOpen(true)}
           >
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
+            <Settings className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={logout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
+          <Button variant="ghost" size="icon" onClick={logout}>
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </header>
@@ -169,6 +182,16 @@ const ManagerDashboard = () => {
             onSetDrawingMode={setDrawingMode}
             pendingCoords={pendingCoords}
             onClearPendingCoords={() => setPendingCoords(null)}
+          />
+        )}
+
+        {/* Alerts History Panel */}
+        {alertsPanelOpen && !isCreatingFence && (
+          <AlertsHistoryPanel
+            alerts={alerts}
+            onClearAlert={clearAlert}
+            onClearAllAlerts={clearAllAlerts}
+            onClose={() => setAlertsPanelOpen(false)}
           />
         )}
       </div>
