@@ -207,6 +207,7 @@ interface WorkerPanelProps {
   onUnassignWorker: (workerId: string) => void;
   apiError?: string | null;
   deviceTimeoutSeconds?: number;
+  showOfflineDevices?: boolean;
 }
 
 export const WorkerPanel = ({
@@ -218,6 +219,7 @@ export const WorkerPanel = ({
   onUnassignWorker,
   apiError,
   deviceTimeoutSeconds = 30,
+  showOfflineDevices = true,
 }: WorkerPanelProps) => {
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
   const [selectedFence, setSelectedFence] = useState<string>('');
@@ -452,25 +454,29 @@ export const WorkerPanel = ({
         </ScrollArea>
       </div>
 
-      <Separator />
+      {showOfflineDevices && (
+        <>
+          <Separator />
 
-      {/* Offline Workers Section */}
-      <div className="flex-shrink-0">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Offline Workers ({offlineWorkers.length})
-        </h3>
-        <ScrollArea className="max-h-[20vh]">
-          <div className="space-y-2">
-            {offlineWorkers.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                All workers are online
-              </p>
-            )}
+          {/* Offline Workers Section */}
+          <div className="flex-shrink-0">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Offline Workers ({offlineWorkers.length})
+            </h3>
+            <ScrollArea className="max-h-[20vh]">
+              <div className="space-y-2">
+                {offlineWorkers.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    All workers are online
+                  </p>
+                )}
 
-            {offlineWorkers.map(workerId => renderWorkerCard(workerId))}
+                {offlineWorkers.map(workerId => renderWorkerCard(workerId))}
+              </div>
+            </ScrollArea>
           </div>
-        </ScrollArea>
-      </div>
+        </>
+      )}
 
       <Separator />
 
