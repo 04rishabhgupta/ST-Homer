@@ -156,6 +156,7 @@ const ManagerDashboard = () => {
             assignments={assignments}
             drawingMode={drawingMode}
             onFenceComplete={handleFenceComplete}
+            defaultZoom={settings.defaultMapZoom}
           />
         </div>
 
