@@ -1,7 +1,8 @@
 import { ZoneAlert } from '@/hooks/useZoneAlerts';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, AlertTriangle, Trash2 } from 'lucide-react';
+import { X, AlertTriangle, Trash2, Download } from 'lucide-react';
+import { format } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns';
 
 interface AlertsHistoryPanelProps {
@@ -96,7 +97,36 @@ export const AlertsHistoryPanel = ({
 
       {/* Footer */}
       {alerts.length > 0 && (
-        <div className="p-3 border-t">
+        <div className="p-3 border-t space-y-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const csvContent = [
+                ['Worker ID', 'Task Area', 'Timestamp'].join(','),
+                ...alerts
+                  .slice()
+                  .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                  .map(alert => [
+                    `"${alert.workerId}"`,
+                    `"${alert.fenceName}"`,
+                    `"${format(new Date(alert.timestamp), 'yyyy-MM-dd HH:mm:ss')}"`
+                  ].join(','))
+              ].join('\n');
+              
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `alerts-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+              link.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="w-full"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export to CSV
+          </Button>
           <Button
             variant="outline"
             size="sm"
