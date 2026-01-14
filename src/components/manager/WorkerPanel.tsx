@@ -3,11 +3,9 @@ import { PolygonFence, WorkerAssignment, GPSLocation } from '@/types/gps';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle, History, Activity } from 'lucide-react';
+import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle, History, Activity, ChevronRight, Signal, SignalZero } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { isPointInPolygon, isWithinShift } from '@/lib/geoUtils';
 
 interface DeviceHistoryDialogProps {
@@ -32,7 +36,6 @@ interface DeviceHistoryDialogProps {
 }
 
 const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHistoryDialogProps) => {
-  // Get all readings for this device, sorted by timestamp (newest first)
   const deviceReadings = locations
     .filter(loc => loc.device_id === deviceId)
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -45,7 +48,6 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
     };
   };
 
-  // Calculate movement intensity from accelerometer data
   const getMovementIntensity = (ax: number, ay: number, az: number) => {
     const magnitude = Math.sqrt(ax * ax + ay * ay + az * az);
     if (magnitude < 1.5) return { label: 'Stationary', color: 'bg-muted text-muted-foreground' };
@@ -57,7 +59,6 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-        {/* Header */}
         <div className="flex-shrink-0 p-5 pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center ring-1 ring-primary/20">
@@ -66,9 +67,7 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
             <div className="flex-1">
               <DialogTitle className="text-lg font-semibold tracking-tight">{deviceId}</DialogTitle>
               <div className="flex items-center gap-3 mt-1">
-                <Badge variant="outline" className="text-[10px] font-medium">
-                  ESP32
-                </Badge>
+                <Badge variant="outline" className="text-[10px] font-medium">ESP32</Badge>
                 <span className="text-sm text-muted-foreground">
                   {deviceReadings.length} reading{deviceReadings.length !== 1 ? 's' : ''}
                 </span>
@@ -77,7 +76,6 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
           </div>
         </div>
 
-        {/* Column Headers */}
         <div className="flex-shrink-0 px-5 py-2.5 bg-muted/50 border-b">
           <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             <div className="col-span-5">Location</div>
@@ -86,7 +84,6 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
           </div>
         </div>
 
-        {/* Content */}
         <ScrollArea className="flex-1">
           <div className="p-3 space-y-2">
             {deviceReadings.length === 0 ? (
@@ -114,28 +111,19 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
                       }
                     `}
                   >
-                    {/* Latest indicator line */}
                     {isLatest && (
                       <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-primary rounded-full" />
                     )}
-
                     <div className="grid grid-cols-12 gap-2 items-start">
-                      {/* Coordinates */}
                       <div className="col-span-5">
                         <div className="flex items-start gap-2">
                           <Navigation className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${isLatest ? 'text-primary' : 'text-muted-foreground'}`} />
                           <div>
-                            <p className="font-mono text-xs font-medium leading-tight">
-                              {reading.latitude.toFixed(6)}
-                            </p>
-                            <p className="font-mono text-xs font-medium leading-tight text-muted-foreground">
-                              {reading.longitude.toFixed(6)}
-                            </p>
+                            <p className="font-mono text-xs font-medium leading-tight">{reading.latitude.toFixed(6)}</p>
+                            <p className="font-mono text-xs font-medium leading-tight text-muted-foreground">{reading.longitude.toFixed(6)}</p>
                           </div>
                         </div>
                       </div>
-
-                      {/* Accelerometer */}
                       <div className="col-span-4">
                         <div className="flex items-start gap-2">
                           <Activity className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${isLatest ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -145,23 +133,16 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
                               <span className="text-primary/80">Y:{reading.ay.toFixed(1)}</span>
                               <span className="text-accent-foreground/80">Z:{reading.az.toFixed(1)}</span>
                             </div>
-                            <Badge 
-                              variant="secondary" 
-                              className={`text-[9px] px-1.5 py-0 h-4 font-medium ${movement.color}`}
-                            >
+                            <Badge variant="secondary" className={`text-[9px] px-1.5 py-0 h-4 font-medium ${movement.color}`}>
                               {movement.label}
                             </Badge>
                           </div>
                         </div>
                       </div>
-
-                      {/* Timestamp */}
                       <div className="col-span-3 text-right">
                         <div className="flex flex-col items-end gap-1">
                           {isLatest && (
-                            <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">
-                              Latest
-                            </Badge>
+                            <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">Latest</Badge>
                           )}
                           <div className="text-[10px] text-muted-foreground">
                             <p className="font-medium">{time}</p>
@@ -177,7 +158,6 @@ const DeviceHistoryDialog = ({ deviceId, locations, isOpen, onClose }: DeviceHis
           </div>
         </ScrollArea>
 
-        {/* Footer Stats */}
         {deviceReadings.length > 0 && (
           <div className="flex-shrink-0 px-5 py-3 border-t bg-muted/30">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -222,7 +202,6 @@ export const WorkerPanel = ({
   const [jobLabel, setJobLabel] = useState('');
   const [selectedDeviceHistory, setSelectedDeviceHistory] = useState<string | null>(null);
 
-  // Get latest location for each device
   const getLatestLocations = (): Map<string, GPSLocation> => {
     const deviceMap = new Map<string, GPSLocation>();
     locations.forEach(loc => {
@@ -242,13 +221,13 @@ export const WorkerPanel = ({
 
   const getWorkerStatus = (workerId: string) => {
     const assignment = assignments.find(a => a.workerId === workerId);
-    if (!assignment) return { status: 'unassigned', color: 'secondary' as const };
+    if (!assignment) return { status: 'unassigned', color: 'secondary' as const, icon: 'neutral' };
 
     const fence = fences.find(f => f.id === assignment.fenceId);
-    if (!fence) return { status: 'unassigned', color: 'secondary' as const };
+    if (!fence) return { status: 'unassigned', color: 'secondary' as const, icon: 'neutral' };
 
     const location = getWorkerLocation(workerId);
-    if (!location) return { status: 'offline', color: 'secondary' as const };
+    if (!location) return { status: 'offline', color: 'secondary' as const, icon: 'offline' };
 
     const now = new Date();
     const withinShift = isWithinShift(now, fence.shiftStart, fence.shiftEnd);
@@ -257,9 +236,9 @@ export const WorkerPanel = ({
       fence.coordinates
     );
 
-    if (!withinShift) return { status: 'off-shift', color: 'secondary' as const };
-    if (insideFence) return { status: 'in-zone', color: 'default' as const };
-    return { status: 'out-of-zone', color: 'destructive' as const };
+    if (!withinShift) return { status: 'off-shift', color: 'secondary' as const, icon: 'neutral' };
+    if (insideFence) return { status: 'in-zone', color: 'default' as const, icon: 'good' };
+    return { status: 'out-of-zone', color: 'destructive' as const, icon: 'warning' };
   };
 
   const handleAssign = () => {
@@ -287,231 +266,299 @@ export const WorkerPanel = ({
     });
   };
 
-  // Separate workers into online and offline
-  const onlineWorkers = workers.filter(workerId => {
-    const location = getWorkerLocation(workerId);
-    return location !== undefined;
-  });
+  const onlineWorkers = workers.filter(workerId => getWorkerLocation(workerId) !== undefined);
+  const offlineWorkers = workers.filter(workerId => getWorkerLocation(workerId) === undefined);
 
-  const offlineWorkers = workers.filter(workerId => {
-    const location = getWorkerLocation(workerId);
-    return location === undefined;
-  });
+  const getStatusIndicator = (icon: string) => {
+    switch (icon) {
+      case 'good':
+        return <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />;
+      case 'warning':
+        return <div className="h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />;
+      case 'offline':
+        return <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />;
+      default:
+        return <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/60" />;
+    }
+  };
 
-  const renderWorkerCard = (workerId: string) => {
+  const renderWorkerRow = (workerId: string, isOnline: boolean) => {
     const assignment = assignments.find(a => a.workerId === workerId);
     const fence = assignment ? fences.find(f => f.id === assignment.fenceId) : null;
-    const { status, color } = getWorkerStatus(workerId);
+    const { status, color, icon } = getWorkerStatus(workerId);
     const location = getWorkerLocation(workerId);
 
     return (
-      <Card key={workerId}>
-        <CardContent className="p-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                location ? 'bg-green-500/20 ring-2 ring-green-500' : 'bg-muted'
-              }`}>
-                <User className={`h-4 w-4 ${location ? 'text-green-600' : ''}`} />
-              </div>
-              <div>
-                <p className="font-medium text-sm">{workerId}</p>
-                <Badge variant={color} className="text-xs mt-1">
-                  {status}
-                </Badge>
-              </div>
-            </div>
-            
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedWorker(workerId);
-                    setSelectedFence(assignment?.fenceId || '');
-                    setJobLabel(assignment?.jobLabel || '');
-                  }}
-                >
-                  {assignment ? 'Edit' : 'Assign'}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Assign Worker: {workerId}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Select Task Area</Label>
-                    <Select value={selectedFence} onValueChange={setSelectedFence}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a task area" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fences.map(f => (
-                          <SelectItem key={f.id} value={f.id}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: f.color }}
-                              />
-                              {f.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Job Label</Label>
-                    <Input
-                      placeholder="e.g., Crane Operator"
-                      value={jobLabel}
-                      onChange={(e) => setJobLabel(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleAssign} className="flex-1">
-                      Save Assignment
-                    </Button>
-                    {assignment && (
-                      <Button
-                        variant="destructive"
-                        onClick={() => onUnassignWorker(workerId)}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+      <div
+        key={workerId}
+        className={`
+          group flex items-center gap-3 p-3 rounded-lg border transition-all duration-200
+          ${isOnline 
+            ? 'bg-card hover:bg-muted/50 border-border/60 hover:border-primary/30' 
+            : 'bg-muted/30 border-border/30 opacity-75 hover:opacity-100'
+          }
+        `}
+      >
+        {/* Avatar & Status */}
+        <div className="relative flex-shrink-0">
+          <div className={`
+            h-10 w-10 rounded-full flex items-center justify-center
+            ${isOnline 
+              ? 'bg-primary/10 ring-2 ring-primary/30' 
+              : 'bg-muted ring-1 ring-border'
+            }
+          `}>
+            <User className={`h-5 w-5 ${isOnline ? 'text-primary' : 'text-muted-foreground'}`} />
           </div>
+          <div className="absolute -bottom-0.5 -right-0.5">
+            {getStatusIndicator(icon)}
+          </div>
+        </div>
 
-          {assignment && fence && (
-            <div className="mt-2 pt-2 border-t text-xs text-muted-foreground space-y-1">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
+        {/* Worker Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm truncate">{workerId}</span>
+            <Badge variant={color} className="text-[10px] px-1.5 py-0 h-5 flex-shrink-0">
+              {status}
+            </Badge>
+          </div>
+          {assignment && fence ? (
+            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1 truncate">
+                <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: fence.color }} />
                 {fence.name}
-              </div>
-              <div className="flex items-center gap-1">
-                <Briefcase className="h-3 w-3" />
+              </span>
+              <span className="flex items-center gap-1 truncate">
+                <Briefcase className="h-3 w-3 flex-shrink-0" />
                 {assignment.jobLabel}
+              </span>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1">No task assigned</p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => {
+                setSelectedWorker(workerId);
+                setSelectedFence(assignment?.fenceId || '');
+                setJobLabel(assignment?.jobLabel || '');
+              }}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <span className="block">{workerId}</span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {assignment ? 'Edit Assignment' : 'New Assignment'}
+                  </span>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label className="text-sm">Task Area</Label>
+                <Select value={selectedFence} onValueChange={setSelectedFence}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Select a task area..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fences.map(f => (
+                      <SelectItem key={f.id} value={f.id}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: f.color }} />
+                          <span>{f.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm">Job Label</Label>
+                <Input
+                  className="h-11"
+                  placeholder="e.g., Crane Operator, Site Inspector"
+                  value={jobLabel}
+                  onChange={(e) => setJobLabel(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleAssign} className="flex-1 h-11">
+                  {assignment ? 'Update Assignment' : 'Assign Worker'}
+                </Button>
+                {assignment && (
+                  <Button
+                    variant="outline"
+                    className="h-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => onUnassignWorker(workerId)}
+                  >
+                    Remove
+                  </Button>
+                )}
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </DialogContent>
+        </Dialog>
+      </div>
     );
   };
 
-  return (
-    <div className="p-4 space-y-4 h-full flex flex-col">
-      {/* Online Workers Section - Pinned */}
-      <div className="flex-shrink-0">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Online Workers ({onlineWorkers.length})
-          </h3>
+  const renderDeviceCard = (deviceId: string, location: GPSLocation) => (
+    <div
+      key={deviceId}
+      className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 border border-transparent hover:border-primary/20 cursor-pointer transition-all"
+      onClick={() => setSelectedDeviceHistory(deviceId)}
+    >
+      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <Signal className="h-4 w-4 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium text-xs truncate">{deviceId}</span>
+          <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 flex-shrink-0">ESP32</Badge>
         </div>
-        <ScrollArea className="max-h-[35vh]">
-          <div className="space-y-2">
-            {onlineWorkers.length === 0 && !apiError && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No workers currently online
-              </p>
-            )}
+        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+          <span className="font-mono truncate">
+            {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+          </span>
+        </div>
+      </div>
+      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+    </div>
+  );
 
-            {apiError && onlineWorkers.length === 0 && (
-              <div className="p-3 bg-destructive/10 rounded-md text-xs">
-                <div className="flex items-center gap-2 text-destructive font-medium mb-1">
-                  <AlertCircle className="h-3 w-3" />
-                  API Connection Failed
+  return (
+    <div className="h-full flex flex-col bg-background/50">
+      {/* Header */}
+      <div className="flex-shrink-0 p-4 border-b bg-card/50">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-base">Workers</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {onlineWorkers.length} online · {offlineWorkers.length} offline
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+              <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
+              Live
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* API Error */}
+      {apiError && (
+        <div className="flex-shrink-0 mx-4 mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+          <div className="flex items-center gap-2 text-destructive text-xs font-medium">
+            <AlertCircle className="h-3.5 w-3.5" />
+            API Connection Failed
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Unable to connect. Check your backend configuration.
+          </p>
+        </div>
+      )}
+
+      {/* Content */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-2">
+          <Accordion type="multiple" defaultValue={['online', 'devices']} className="space-y-3">
+            {/* Online Workers */}
+            <AccordionItem value="online" className="border rounded-lg bg-card/50 overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:border-b">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <Signal className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="text-left">
+                    <span className="font-medium text-sm">Online Workers</span>
+                    <p className="text-xs text-muted-foreground font-normal">{onlineWorkers.length} active</p>
+                  </div>
                 </div>
-                <p className="text-muted-foreground">
-                  Unable to connect to the API. Please check your connection.
-                </p>
-              </div>
-            )}
-
-            {onlineWorkers.map(workerId => renderWorkerCard(workerId))}
-          </div>
-        </ScrollArea>
-      </div>
-
-      <Separator />
-
-      {/* Offline Workers Section */}
-      <div className="flex-shrink-0">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Offline Workers ({offlineWorkers.length})
-        </h3>
-        <ScrollArea className="max-h-[20vh]">
-          <div className="space-y-2">
-            {offlineWorkers.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                All workers are online
-              </p>
-            )}
-
-            {offlineWorkers.map(workerId => renderWorkerCard(workerId))}
-          </div>
-        </ScrollArea>
-      </div>
-
-      <Separator />
-
-      {/* Device Log Section - All ESP32 devices from sensor_log */}
-      <div className="flex-1 min-h-0">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          ESP32 Device Log
-        </h3>
-        <ScrollArea className="h-[calc(30vh-100px)]">
-          <div className="space-y-2">
-            {latestLocations.size === 0 && !apiError && (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                Waiting for device data...
-              </p>
-            )}
-
-            {apiError && latestLocations.size === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                Connect to your PHP backend to see device data
-              </p>
-            )}
-
-            {Array.from(latestLocations.entries()).map(([deviceId, location]) => (
-              <Card 
-                key={deviceId} 
-                className="bg-muted/50 cursor-pointer hover:bg-muted/80 hover:border-primary/50 transition-colors"
-                onClick={() => setSelectedDeviceHistory(deviceId)}
-              >
-                <CardContent className="p-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-xs">{deviceId}</span>
-                    <Badge variant="outline" className="text-[10px] px-1 py-0">
-                      ESP32
-                    </Badge>
-                  </div>
-                  <div className="space-y-1 text-[10px] text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Navigation className="h-2.5 w-2.5" />
-                      <span className="font-mono">
-                        {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                      </span>
+              </AccordionTrigger>
+              <AccordionContent className="px-3 pb-3 pt-3">
+                <div className="space-y-2">
+                  {onlineWorkers.length === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <SignalZero className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      <p className="text-sm">No workers online</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-2.5 w-2.5" />
-                      <span>{formatTimestamp(location.timestamp)}</span>
+                  ) : (
+                    onlineWorkers.map(workerId => renderWorkerRow(workerId, true))
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Offline Workers */}
+            {offlineWorkers.length > 0 && (
+              <AccordionItem value="offline" className="border rounded-lg bg-card/50 overflow-hidden">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:border-b">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                      <SignalZero className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="text-left">
+                      <span className="font-medium text-sm">Offline Workers</span>
+                      <p className="text-xs text-muted-foreground font-normal">{offlineWorkers.length} inactive</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 pb-3 pt-3">
+                  <div className="space-y-2">
+                    {offlineWorkers.map(workerId => renderWorkerRow(workerId, false))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+
+            {/* Device Log */}
+            <AccordionItem value="devices" className="border rounded-lg bg-card/50 overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:border-b">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Activity className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <span className="font-medium text-sm">ESP32 Devices</span>
+                    <p className="text-xs text-muted-foreground font-normal">{latestLocations.size} reporting</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-3 pb-3 pt-3">
+                <div className="space-y-2">
+                  {latestLocations.size === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <Signal className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      <p className="text-sm">Waiting for device data...</p>
+                    </div>
+                  ) : (
+                    Array.from(latestLocations.entries()).map(([deviceId, location]) =>
+                      renderDeviceCard(deviceId, location)
+                    )
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </ScrollArea>
 
       {/* Device History Dialog */}
       {selectedDeviceHistory && (
