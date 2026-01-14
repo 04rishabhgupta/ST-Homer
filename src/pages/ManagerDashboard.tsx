@@ -135,6 +135,7 @@ const ManagerDashboard = () => {
                 onAssignWorker={assignWorker}
                 onUnassignWorker={unassignWorker}
                 apiError={error}
+                deviceTimeoutSeconds={settings.deviceTimeoutSeconds}
               />
             </TabsContent>
           </Tabs>
