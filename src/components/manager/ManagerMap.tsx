@@ -263,26 +263,49 @@ export const ManagerMap = ({
           position={infoWindow.position}
           onCloseClick={() => setInfoWindow(null)}
         >
-          <div className="p-2 min-w-[180px]">
-            <h3 className="font-semibold text-sm mb-2">{infoWindow.deviceId}</h3>
-            <div className="text-xs space-y-1 text-gray-600">
-              <p>
-                <span className="font-medium">Status:</span>{' '}
-                <span className={
-                  infoWindow.status === 'compliant' ? 'text-green-600' :
-                  infoWindow.status === 'violation' ? 'text-red-600' : 'text-gray-500'
-                }>
+          <div className="min-w-[200px] font-[Lexend,sans-serif]">
+            {/* Header with gradient */}
+            <div 
+              className="px-3 py-2 rounded-t-md"
+              style={{ background: 'linear-gradient(135deg, #84994F 0%, #6b7a3f 100%)' }}
+            >
+              <h3 className="font-semibold text-sm text-white">{infoWindow.deviceId}</h3>
+            </div>
+            
+            {/* Content */}
+            <div 
+              className="px-3 py-2 space-y-2 rounded-b-md"
+              style={{ backgroundColor: '#faf8f0' }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium" style={{ color: '#5a6b3a' }}>Status</span>
+                <span 
+                  className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: infoWindow.status === 'compliant' ? '#84994F' :
+                      infoWindow.status === 'violation' ? '#A72703' : '#94a3b8',
+                    color: '#ffffff'
+                  }}
+                >
                   {getStatusLabel(infoWindow.status)}
                 </span>
-              </p>
-              <p>
-                <span className="font-medium">Position:</span>{' '}
-                {infoWindow.location.latitude.toFixed(6)}, {infoWindow.location.longitude.toFixed(6)}
-              </p>
-              <p>
-                <span className="font-medium">Last Update:</span>{' '}
-                {new Date(infoWindow.location.timestamp).toLocaleString()}
-              </p>
+              </div>
+              
+              <div className="border-t" style={{ borderColor: '#e5e2d3' }} />
+              
+              <div>
+                <span className="text-xs font-medium block" style={{ color: '#5a6b3a' }}>Position</span>
+                <span className="text-xs" style={{ color: '#3d4a28' }}>
+                  {infoWindow.location.latitude.toFixed(6)}, {infoWindow.location.longitude.toFixed(6)}
+                </span>
+              </div>
+              
+              <div>
+                <span className="text-xs font-medium block" style={{ color: '#5a6b3a' }}>Last Update</span>
+                <span className="text-xs" style={{ color: '#3d4a28' }}>
+                  {new Date(infoWindow.location.timestamp).toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
         </InfoWindow>
