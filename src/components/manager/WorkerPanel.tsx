@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle, History, Activity } from 'lucide-react';
+import { User, MapPin, Briefcase, Clock, Navigation, AlertCircle, History, Activity, ChevronDown, ChevronRight, Cpu } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -319,217 +319,238 @@ export const WorkerPanel = ({
     const online = isDeviceOnline(location);
 
     return (
-      <Card key={workerId}>
-        <CardContent className="p-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                online ? 'bg-green-500/20 ring-2 ring-green-500' : 'bg-muted'
-              }`}>
-                <User className={`h-4 w-4 ${online ? 'text-green-600' : ''}`} />
-              </div>
-              <div>
-                <p className="font-medium text-sm">{workerId}</p>
-                <Badge variant={color} className="text-xs mt-1">
-                  {status}
-                </Badge>
-              </div>
-            </div>
-            
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedWorker(workerId);
-                    setSelectedFence(assignment?.fenceId || '');
-                    setJobLabel(assignment?.jobLabel || '');
-                  }}
-                >
-                  {assignment ? 'Edit' : 'Assign'}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Assign Worker: {workerId}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Select Task Area</Label>
-                    <Select value={selectedFence} onValueChange={setSelectedFence}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a task area" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fences.map(f => (
-                          <SelectItem key={f.id} value={f.id}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: f.color }}
-                              />
-                              {f.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Job Label</Label>
-                    <Input
-                      placeholder="e.g., Crane Operator"
-                      value={jobLabel}
-                      onChange={(e) => setJobLabel(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleAssign} className="flex-1">
-                      Save Assignment
-                    </Button>
-                    {assignment && (
-                      <Button
-                        variant="destructive"
-                        onClick={() => onUnassignWorker(workerId)}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+      <div key={workerId} className="flex items-center gap-3 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-border transition-colors">
+        {/* Avatar */}
+        <div className={`h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+          online ? 'bg-green-500/15 ring-2 ring-green-500/60' : 'bg-muted'
+        }`}>
+          <User className={`h-4 w-4 ${online ? 'text-green-600' : 'text-muted-foreground'}`} />
+        </div>
 
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm truncate">{workerId}</p>
+            <Badge variant={color} className="text-[10px] px-1.5 py-0 h-5 flex-shrink-0">
+              {status}
+            </Badge>
+          </div>
           {assignment && fence && (
-            <div className="mt-2 pt-2 border-t text-xs text-muted-foreground space-y-1">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
+            <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1 truncate">
+                <MapPin className="h-3 w-3 flex-shrink-0" />
                 {fence.name}
-              </div>
-              <div className="flex items-center gap-1">
-                <Briefcase className="h-3 w-3" />
+              </span>
+              <span className="flex items-center gap-1 truncate">
+                <Briefcase className="h-3 w-3 flex-shrink-0" />
                 {assignment.jobLabel}
-              </div>
+              </span>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Action */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => {
+                setSelectedWorker(workerId);
+                setSelectedFence(assignment?.fenceId || '');
+                setJobLabel(assignment?.jobLabel || '');
+              }}
+            >
+              {assignment ? 'Edit' : 'Assign'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assign Worker: {workerId}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Select Task Area</Label>
+                <Select value={selectedFence} onValueChange={setSelectedFence}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a task area" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fences.map(f => (
+                      <SelectItem key={f.id} value={f.id}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: f.color }}
+                          />
+                          {f.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Job Label</Label>
+                <Input
+                  placeholder="e.g., Crane Operator"
+                  value={jobLabel}
+                  onChange={(e) => setJobLabel(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleAssign} className="flex-1">
+                  Save Assignment
+                </Button>
+                {assignment && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => onUnassignWorker(workerId)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     );
   };
 
+  const [onlineOpen, setOnlineOpen] = useState(true);
+  const [offlineOpen, setOfflineOpen] = useState(true);
+  const [deviceLogOpen, setDeviceLogOpen] = useState(true);
+
   return (
-    <div className="p-4 space-y-4 h-full flex flex-col">
-      {/* Online Workers Section - Pinned */}
-      <div className="flex-shrink-0">
-        <div className="flex items-center gap-2 mb-2">
+    <div className="p-3 space-y-2 h-full flex flex-col">
+      {/* Online Workers Section */}
+      <Collapsible open={onlineOpen} onOpenChange={setOnlineOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 px-1 rounded-md hover:bg-muted/50 transition-colors">
+          {onlineOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Online Workers ({onlineWorkers.length})
-          </h3>
-        </div>
-        <ScrollArea className="max-h-[35vh]">
-          <div className="space-y-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Online Workers
+          </span>
+          <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 h-5">
+            {onlineWorkers.length}
+          </Badge>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="pl-6 pr-1 pb-2">
             {onlineWorkers.length === 0 && !apiError && (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">
                 No workers currently online
               </p>
             )}
-
             {apiError && onlineWorkers.length === 0 && (
-              <div className="p-3 bg-destructive/10 rounded-md text-xs">
-                <div className="flex items-center gap-2 text-destructive font-medium mb-1">
+              <div className="p-2.5 bg-destructive/10 rounded-lg text-xs">
+                <div className="flex items-center gap-2 text-destructive font-medium">
                   <AlertCircle className="h-3 w-3" />
                   API Connection Failed
                 </div>
-                <p className="text-muted-foreground">
-                  Unable to connect to the API. Please check your connection.
-                </p>
               </div>
             )}
-
-            {onlineWorkers.map(workerId => renderWorkerCard(workerId))}
+            <div className="space-y-1.5">
+              {onlineWorkers.map(workerId => renderWorkerCard(workerId))}
+            </div>
           </div>
-        </ScrollArea>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {showOfflineDevices && (
-        <>
-          <Separator />
-
-          {/* Offline Workers Section */}
-          <div className="flex-shrink-0">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Offline Workers ({offlineWorkers.length})
-            </h3>
-            <ScrollArea className="max-h-[20vh]">
-              <div className="space-y-2">
-                {offlineWorkers.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">
-                    All workers are online
-                  </p>
-                )}
-
+        <Collapsible open={offlineOpen} onOpenChange={setOfflineOpen}>
+          <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 px-1 rounded-md hover:bg-muted/50 transition-colors">
+            {offlineOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+            <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Offline Workers
+            </span>
+            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 h-5">
+              {offlineWorkers.length}
+            </Badge>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="pl-6 pr-1 pb-2">
+              {offlineWorkers.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">
+                  All workers are online
+                </p>
+              )}
+              <div className="space-y-1.5">
                 {offlineWorkers.map(workerId => renderWorkerCard(workerId))}
               </div>
-            </ScrollArea>
-          </div>
-        </>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
-      <Separator />
-
-      {/* Device Log Section - All ESP32 devices from sensor_log */}
-      <div className="flex-1 min-h-0">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          ESP32 Device Log
-        </h3>
-        <ScrollArea className="h-[calc(30vh-100px)]">
-          <div className="space-y-2">
-            {latestLocations.size === 0 && !apiError && (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                Waiting for device data...
-              </p>
-            )}
-
-            {apiError && latestLocations.size === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                Connect to your PHP backend to see device data
-              </p>
-            )}
-
-            {Array.from(latestLocations.entries()).map(([deviceId, location]) => (
-              <Card 
-                key={deviceId} 
-                className="bg-muted/50 cursor-pointer hover:bg-muted/80 hover:border-primary/50 transition-colors"
-                onClick={() => setSelectedDeviceHistory(deviceId)}
-              >
-                <CardContent className="p-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-xs">{deviceId}</span>
-                    <Badge variant="outline" className="text-[10px] px-1 py-0">
-                      ESP32
-                    </Badge>
-                  </div>
-                  <div className="space-y-1 text-[10px] text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Navigation className="h-2.5 w-2.5" />
-                      <span className="font-mono">
-                        {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                      </span>
+      {/* Device Log Section */}
+      <Collapsible open={deviceLogOpen} onOpenChange={setDeviceLogOpen} className="flex-1 min-h-0 flex flex-col">
+        <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 px-1 rounded-md hover:bg-muted/50 transition-colors">
+          {deviceLogOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          <Cpu className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Device Log
+          </span>
+          <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 h-5">
+            {latestLocations.size}
+          </Badge>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="flex-1 min-h-0">
+          <ScrollArea className="h-full max-h-[40vh] pl-6 pr-1">
+            <div className="space-y-1.5 pb-2">
+              {latestLocations.size === 0 && !apiError && (
+                <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">
+                  Waiting for device data...
+                </p>
+              )}
+              {apiError && latestLocations.size === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">
+                  Connect to your PHP backend
+                </p>
+              )}
+              {Array.from(latestLocations.entries()).map(([deviceId, location]) => {
+                const online = isDeviceOnline(location);
+                return (
+                  <div 
+                    key={deviceId} 
+                    className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/30 border border-border/30 cursor-pointer hover:bg-muted/50 hover:border-primary/30 transition-colors"
+                    onClick={() => setSelectedDeviceHistory(deviceId)}
+                  >
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      online ? 'bg-green-500/15' : 'bg-muted'
+                    }`}>
+                      <Cpu className={`h-4 w-4 ${online ? 'text-green-600' : 'text-muted-foreground'}`} />
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-2.5 w-2.5" />
-                      <span>{formatTimestamp(location.timestamp)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-sm truncate">{deviceId}</span>
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 flex-shrink-0">
+                          ESP32
+                        </Badge>
+                      </div>
+                      <div className="mt-1 space-y-0.5 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Navigation className="h-2.5 w-2.5 flex-shrink-0" />
+                          <span className="font-mono truncate">
+                            {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                          <span>{formatTimestamp(location.timestamp)}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Device History Dialog */}
       {selectedDeviceHistory && (
