@@ -3,12 +3,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGPSData } from '@/hooks/useGPSData';
 import { usePolygonFences } from '@/hooks/usePolygonFences';
 import { useWorkerAssignments } from '@/hooks/useWorkerAssignments';
+import { useManagerSettings } from '@/hooks/useManagerSettings';
 import { ManagerMap } from '@/components/manager/ManagerMap';
 import { FencePanel, FenceCreationPanel, DrawingMode } from '@/components/manager/FencePanel';
 import { WorkerPanel } from '@/components/manager/WorkerPanel';
+import { SettingsDialog } from '@/components/manager/SettingsDialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, RefreshCw, Users, MapPin } from 'lucide-react';
+import { LogOut, RefreshCw, Users, MapPin, Settings } from 'lucide-react';
 import homerLogo from '@/assets/homer-logo.gif';
 import { PolygonFence } from '@/types/gps';
 
@@ -17,8 +19,10 @@ const ManagerDashboard = () => {
   const [drawingMode, setDrawingMode] = useState<DrawingMode>('none');
   const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number }[] | null>(null);
   const [isCreatingFence, setIsCreatingFence] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   const { locations, isLoading, refresh, error } = useGPSData();
+  const { settings, updateSettings, resetToDefaults } = useManagerSettings();
   const { fences, addFence, removeFence, updateFence } = usePolygonFences();
   const { assignments, assignWorker, unassignWorker } = useWorkerAssignments();
 
@@ -67,12 +71,28 @@ const ManagerDashboard = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
           <Button variant="ghost" size="sm" onClick={logout}>
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
         </div>
       </header>
+
+      <SettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        settings={settings}
+        onSave={(newSettings) => updateSettings(newSettings)}
+        onReset={resetToDefaults}
+      />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar */}
