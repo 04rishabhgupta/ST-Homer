@@ -4,6 +4,7 @@ import { useGPSData } from '@/hooks/useGPSData';
 import { usePolygonFences } from '@/hooks/usePolygonFences';
 import { useWorkerAssignments } from '@/hooks/useWorkerAssignments';
 import { useManagerSettings } from '@/hooks/useManagerSettings';
+import { useZoneAlerts } from '@/hooks/useZoneAlerts';
 import { ManagerMap } from '@/components/manager/ManagerMap';
 import { FencePanel, FenceCreationPanel, DrawingMode } from '@/components/manager/FencePanel';
 import { WorkerPanel } from '@/components/manager/WorkerPanel';
@@ -27,6 +28,11 @@ const ManagerDashboard = () => {
   });
   const { fences, addFence, removeFence, updateFence } = usePolygonFences();
   const { assignments, assignWorker, unassignWorker } = useWorkerAssignments();
+
+  // Zone alerts with configurable delay from settings
+  useZoneAlerts(locations, fences, assignments, {
+    outOfZoneAlertDelaySeconds: settings.outOfZoneAlertDelaySeconds,
+  });
 
   const workers = Array.from(new Set(locations.map(loc => loc.device_id)));
 
