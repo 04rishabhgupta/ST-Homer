@@ -262,35 +262,25 @@ export const ManagerMap = ({
         <InfoWindow
           position={infoWindow.position}
           onCloseClick={() => setInfoWindow(null)}
-          options={{
-            pixelOffset: new google.maps.Size(0, -5),
-            maxWidth: 280,
-          }}
         >
-          <div 
-            className="font-[Lexend,sans-serif] overflow-hidden"
-            style={{ 
-              margin: '-13px -13px -15px -13px',
-              minWidth: '220px',
-            }}
-          >
+          <div className="min-w-[200px] font-[Lexend,sans-serif]">
             {/* Header with gradient */}
             <div 
-              className="px-4 py-3"
+              className="px-3 py-2 rounded-t-md"
               style={{ background: 'linear-gradient(135deg, #84994F 0%, #6b7a3f 100%)' }}
             >
-              <h3 className="font-semibold text-sm text-white tracking-wide">{infoWindow.deviceId}</h3>
+              <h3 className="font-semibold text-sm text-white">{infoWindow.deviceId}</h3>
             </div>
             
             {/* Content */}
             <div 
-              className="px-4 py-3 space-y-3"
+              className="px-3 py-2 space-y-2 rounded-b-md"
               style={{ backgroundColor: '#faf8f0' }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wider" style={{ color: '#5a6b3a' }}>Status</span>
+                <span className="text-xs font-medium" style={{ color: '#5a6b3a' }}>Status</span>
                 <span 
-                  className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                  className="text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={{
                     backgroundColor: infoWindow.status === 'compliant' ? '#84994F' :
                       infoWindow.status === 'violation' ? '#A72703' : '#94a3b8',
@@ -301,18 +291,18 @@ export const ManagerMap = ({
                 </span>
               </div>
               
-              <div style={{ borderTop: '1px solid #e5e2d3' }} />
+              <div className="border-t" style={{ borderColor: '#e5e2d3' }} />
               
               <div>
-                <span className="text-xs font-medium uppercase tracking-wider block mb-1" style={{ color: '#5a6b3a' }}>Position</span>
-                <span className="text-sm font-medium" style={{ color: '#3d4a28' }}>
+                <span className="text-xs font-medium block" style={{ color: '#5a6b3a' }}>Position</span>
+                <span className="text-xs" style={{ color: '#3d4a28' }}>
                   {infoWindow.location.latitude.toFixed(6)}, {infoWindow.location.longitude.toFixed(6)}
                 </span>
               </div>
               
               <div>
-                <span className="text-xs font-medium uppercase tracking-wider block mb-1" style={{ color: '#5a6b3a' }}>Last Update</span>
-                <span className="text-sm font-medium" style={{ color: '#3d4a28' }}>
+                <span className="text-xs font-medium block" style={{ color: '#5a6b3a' }}>Last Update</span>
+                <span className="text-xs" style={{ color: '#3d4a28' }}>
                   {new Date(infoWindow.location.timestamp).toLocaleString()}
                 </span>
               </div>
