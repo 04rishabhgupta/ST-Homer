@@ -206,6 +206,7 @@ interface WorkerPanelProps {
   onAssignWorker: (assignment: Omit<WorkerAssignment, 'id'>) => void;
   onUnassignWorker: (workerId: string) => void;
   apiError?: string | null;
+  deviceTimeoutSeconds?: number;
 }
 
 export const WorkerPanel = ({
@@ -216,6 +217,7 @@ export const WorkerPanel = ({
   onAssignWorker,
   onUnassignWorker,
   apiError,
+  deviceTimeoutSeconds = 30,
 }: WorkerPanelProps) => {
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
   const [selectedFence, setSelectedFence] = useState<string>('');
@@ -287,15 +289,24 @@ export const WorkerPanel = ({
     });
   };
 
-  // Separate workers into online and offline
+  // Helper to check if a device is online based on timeout setting
+  const isDeviceOnline = (location: GPSLocation | undefined): boolean => {
+    if (!location) return false;
+    const lastReading = new Date(location.timestamp).getTime();
+    const now = Date.now();
+    const timeoutMs = deviceTimeoutSeconds * 1000;
+    return (now - lastReading) < timeoutMs;
+  };
+
+  // Separate workers into online and offline based on timeout
   const onlineWorkers = workers.filter(workerId => {
     const location = getWorkerLocation(workerId);
-    return location !== undefined;
+    return isDeviceOnline(location);
   });
 
   const offlineWorkers = workers.filter(workerId => {
     const location = getWorkerLocation(workerId);
-    return location === undefined;
+    return !isDeviceOnline(location);
   });
 
   const renderWorkerCard = (workerId: string) => {
@@ -303,6 +314,7 @@ export const WorkerPanel = ({
     const fence = assignment ? fences.find(f => f.id === assignment.fenceId) : null;
     const { status, color } = getWorkerStatus(workerId);
     const location = getWorkerLocation(workerId);
+    const online = isDeviceOnline(location);
 
     return (
       <Card key={workerId}>
@@ -310,9 +322,9 @@ export const WorkerPanel = ({
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                location ? 'bg-green-500/20 ring-2 ring-green-500' : 'bg-muted'
+                online ? 'bg-green-500/20 ring-2 ring-green-500' : 'bg-muted'
               }`}>
-                <User className={`h-4 w-4 ${location ? 'text-green-600' : ''}`} />
+                <User className={`h-4 w-4 ${online ? 'text-green-600' : ''}`} />
               </div>
               <div>
                 <p className="font-medium text-sm">{workerId}</p>
